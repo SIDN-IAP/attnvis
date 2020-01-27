@@ -1,19 +1,17 @@
-import numpy as np
 import torch
-from torch.nn import functional as F
 from transformers import (
     AutoTokenizer,
     AutoModel,
-    PreTrainedModel,
-    PreTrainedTokenizer,
 )
+
 
 class AttentionGetter:
     def __init__(self, model_name: str):
         super().__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = AutoModel.from_pretrained(
-                model_name, output_attentions=True).to(self.device)
+        self.model = AutoModel.from_pretrained(model_name, output_attentions=True).to(
+            self.device
+        )
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.bos_token_id = self.tokenizer.bos_token_id
 
@@ -31,8 +29,11 @@ class AttentionGetter:
         # Grab the attention from the output
         # Format as Layer x Head x From x To
         attn = torch.cat([l for l in model_output[2]], dim=0)
-        return {'tokens': self.tokenizer.convert_ids_to_tokens(context[0][1:]),
-                'attention': attn.cpu().tolist()}
+        return {
+            "tokens": self.tokenizer.convert_ids_to_tokens(context[0][1:]),
+            "attention": attn.cpu().tolist(),
+        }
+
 
 if __name__ == "__main__":
     model = AttentionGetter("gpt2")
