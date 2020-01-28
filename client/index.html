@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <title>Minimal Attention VIS</title>
+    <style>
+        /* simple styles */
+        body {
+            /* background-color: #aaaaaa; */
+            font-family: Helvetica, Arial, sans-serif;
+        }
+
+        .header input {
+            width: 300px;
+        }
+
+        .word {
+            cursor: pointer;
+            transition-property: background-color;
+            transition-duration: 200ms;
+            min-width: 15px;
+        }
+
+        .word:hover{
+            background-color: lightblue;
+        }
+
+        .word.selected {
+            outline: 1px dashed #404080;
+            outline-offset: -1px;
+        }
+
+        .word.spaceLeft::before {
+            content: ' ';
+        }
+
+        .word.newLine {
+            display: block;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: lightgray;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .btn:hover, .btn.selected {
+            background-color: lightblue;
+            /*color: white;*/
+        }
+
+        .btn.btn_l {
+            border-radius: 3px 0 0 3px;
+        }
+
+        .btn.btn_r {
+            border-radius: 0 3px 3px 0;
+        }
+
+        .attBox {
+            width: 20px;
+            height: 10px;
+            padding: 0;
+
+            display: inline-block;
+            pointer-events: none;
+        }
+
+        .attBox.selected {
+            outline: 1px dashed #404080;
+            outline-offset: -1px;
+            pointer-events: none;
+        }
+
+        .head {
+            white-space: nowrap;
+        }
+
+        .head.selected {
+            background-color: lightblue;
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+<!-- Define main structure of webpage -->
+<h3>Minimal Attention Vis</h3>
+<!--<p>Please enter a sentence:</p>-->
+<div class="header">
+    Select model: <select name="" id="model_select">
+    <option value="gpt2"> GPT-2 </option>
+    <option value="distilbert-base-uncased"> Distil Bert </option>
+</select>
+    <br>
+    Please enter a sentence:
+    <input type="text" id="inputText"
+           value="I dropped my pen in the mashed potatoes.">
+</div>
+<hr>
+<div style="padding-top: 5px;">
+    <div style="font-weight: bold; padding-top: 10px;">Results</div>
+    <div id="results" style="padding-top: 5px;">
+
+    </div>
+    <div style="font-weight: bold; padding-top: 10px;">Layers & Heads</div>
+    <div id="layers" style="padding-top: 5px;">
+        <!--        <h3>Layers</h3>-->
+    </div>
+    <!--    <div style="font-weight: bold; padding-top: 5px;">Heads:</div>-->
+    <div id="heads" style="padding-top: 5px;">
+        <!--        <h3>Heads</h3>-->
+    </div>
+
+
+</div>
+
+<!-- End of main structure part -->
+
+
+<script>
+
+    // all sentences and sentiments
+    let currentModel = "gpt2";
+    let currentResults = null;
+    let currentSelection = Number.MAX_VALUE;
+    let selectedLayer = 0;
+    let selectedHead = -1;
+    let selectedHeadFix = false;
+
+    const colorScale = d3.scaleLinear().domain([0, 0.1, 1])
+      .range(['#fff', '#aaa', '#4d4d4d'])
+
+    // select input field..
+    const myInput = d3.select("#inputText");
+    // .. and act when change of content:
+    myInput.on('change', () => {
+        // get input content and bind to var
+        const input_sentence = myInput.property('value');
+        console.log(input_sentence);
+        // and reset input field
+        // myInput.property('value', '');
+
+        // send everything over to the python side using the REST server
+        // and return a JS Promise
+        const server_query = d3.json('../api/attn', {
+            method: "POST",
+            body: JSON.stringify({
+                sentence: input_sentence,
+                model_name: d3.select('#model_select').property('value')
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+
+        // if Promise is fullfilled (aka: server response is back) then...
+        server_query.then(a => {
+
+            console.log("-hen-- ", a);
+            currentModel  = a.request.model_name;
+            currentResults = a.results;
+
+            currentSelection = Math.min(currentSelection,
+              a.results.tokens.length - 1);
+            // selectedHeadFix = false;
+
+
+            updateLayerBtns(currentResults.attention.length);
+            // update Vis with updated allSentences
+            updateVis();
+            updateHeads();
+
+        });
+
+
+    })
+
+    function updateWordBG() {
+        if (selectedHead >= 0) {
+            d3.select('#results').selectAll('.word')
+              .style('background-color', (d, i) => colorScale(
+                currentResults.attention[selectedLayer][selectedHead][currentSelection][i]));
+        } else {
+            d3.select('#results').selectAll('.word')
+              .style('background-color', (d, i) => '#fff');
+        }
+    }
+
+    function updateVis() {
+
+        // select result table
+        const resDom = d3.select('#results');
+
+        // synchronize all token Elements  with DOM element span
+        // of class `.word`
+
+        const allWords = resDom.selectAll('.word')
+          .data(currentResults.tokens.map(d => token_cleanup(d)))
+          .join('span')
+          .attr('class',
+            d => 'word ' + (d.newLine ? 'newLine ' : '') + (d.spaceLeft ? 'spaceLeft ' : ''))
+          .text(d => d.clean);
+
+        allWords.classed('selected', (d, i) => i === currentSelection);
+
+        allWords.on('click', (d, i) => {
+            currentSelection = (i === currentSelection) ? -1 : i;
+            updateHeads();
+            updateVis();
+        })
+
+        updateWordBG();
+
+    }
+
+    function updateHeadSelection() {
+        d3.select('#heads').selectAll('.head')
+          .classed('selected', (d, i) => i === selectedHead)
+    }
+
+    function updateHeads() {
+        // select result table
+        const headsDOM = d3.select('#heads');
+
+        if (currentSelection < 0) {
+            headsDOM.style('display', 'none');
+            return;
+        } else {
+            headsDOM.style('display', null);
+        }
+
+        const heads = headsDOM.selectAll('.head')
+          .data(currentResults.attention[selectedLayer])
+          .join('div')
+          .attr('class', 'head')
+          .on('mouseenter', (d, i) => {
+              if (selectedHeadFix) return;
+              // else
+              selectedHead = i;
+              updateHeadSelection();
+              updateWordBG();
+          })
+          .on('mouseout', (d, i) => {
+              if (selectedHeadFix) return;
+              selectedHead = -1;
+              updateHeadSelection();
+              updateWordBG();
+          })
+          .on('click', (d, i) => {
+              selectedHead = i;
+              selectedHeadFix = !selectedHeadFix;
+              updateHeadSelection();
+              updateWordBG();
+          })
+
+        updateHeadSelection();
+
+        heads.selectAll('.attBox').data(d => d[currentSelection])
+          .join('div')
+          .attr('class', 'attBox')
+          .classed('selected', (d, i) => i === currentSelection)
+          .style('background-color', d => colorScale(d))
+
+    }
+
+
+    // ===================
+    // HELPER functions
+    // ===================
+
+
+    const updateLayerBtns = (no_btns) => {
+        d3.select('#layers').selectAll('.btn').data(d3.range(no_btns))
+          .join('div')
+          .attr('class', 'btn')
+          .classed('btn_l', d => d === 0)
+          .classed('btn_r', d => d === (no_btns - 1))
+          .text(d => d)
+          .on('click', d => {
+              selectedLayer = d;
+              updateLayerSelection();
+              updateHeads();
+              updateVis();
+          })
+
+        updateLayerSelection();
+    };
+
+    const updateLayerSelection = () => {
+        d3.select('#layers').selectAll('.btn')
+          .classed('selected', d => d === selectedLayer);
+    }
+
+    function token_cleanup(token){
+        if (currentModel.startsWith("gpt"))
+            return token_cleanup_gpt(token);
+        else
+            return token_cleanup_bert(token);
+    }
+
+    function token_cleanup_bert(token) {
+        let clean = token;
+        let spaceLeft = true;
+        if (token.startsWith('##')) {
+            clean = clean.slice(2);
+            spaceLeft = false;
+        }
+
+        return {
+            token,
+            clean,
+            spaceLeft,
+            newLine: false
+        };
+    }
+
+    function token_cleanup_gpt(token) {
+
+        let clean = (token.startsWith('Ġ')) ? token.slice(
+          1) : ((token.startsWith(
+          'Ċ') || token.startsWith('â')) ? " " : token);
+        // clean = (token.startsWith('â')) ? '–' : clean;
+        // clean = (token.startsWith('ľ')) ? '“' : clean;
+        // clean = (token.startsWith('Ŀ')) ? '”' : clean;
+        // clean = (token.startsWith('Ļ')) ? "'" : clean;
+
+        try {
+            clean = decodeURIComponent(escape(clean));
+        } catch {
+            console.log(token, '-- token is weird.');
+        }
+
+        return {
+            token,
+            clean,
+            spaceLeft: token.startsWith('Ġ'),
+            newLine: token.startsWith('Ċ')
+        };
+    }
+
+
+</script>
+
+
+</body>
+
+</html>

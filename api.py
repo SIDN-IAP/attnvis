@@ -15,7 +15,7 @@ class AttentionGetter:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.bos_token_id = self.tokenizer.bos_token_id
 
-    def analyze_text(self, text: str):
+    def gpt_analyze_text(self, text: str):
         # Process Input
         toked = self.tokenizer.encode(text)
         # Convert to PyTorch Tensor
@@ -28,15 +28,32 @@ class AttentionGetter:
         model_output = self.model(context)
         # Grab the attention from the output
         # Format as Layer x Head x From x To
-        attn = torch.cat([l for l in model_output[2]], dim=0)
+        attn = torch.cat([l for l in model_output[-1]], dim=0)
         return {
             "tokens": self.tokenizer.convert_ids_to_tokens(context[0][1:]),
             "attention": attn.cpu().tolist(),
         }
 
+    def bert_analyze_text(self, text: str):
+        """Works for BERT models"""
+        toked = self.tokenizer.encode(text)
+        input = torch.tensor(toked).unsqueeze(0).long()
+        output = self.model(input)
+        attn = torch.cat([a for a in output[-1]], dim=0)
+        return {
+            "tokens": self.tokenizer.convert_ids_to_tokens(toked),
+            "attention": attn.cpu().tolist(),
+        }
+
+
 
 if __name__ == "__main__":
     model = AttentionGetter("gpt2")
-    payload = model.analyze_text("This is a test.")
+    payload = model.gpt_analyze_text("This is a test.")
     print(payload)
+
+    model = AttentionGetter("distilbert-base-uncased")
+    payload = model.bert_analyze_text("This is a test.")
+    print(payload)
+
     print("checking successful!")

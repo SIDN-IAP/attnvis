@@ -1,0 +1,13 @@
+name: attnvis
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.6
+  - pytorch
+  - nodejs
+  - pip
+  - flask
+  - pip:
+      - transformers
+
