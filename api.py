@@ -6,7 +6,14 @@ from transformers import (
 
 
 class AttentionGetter:
+    '''
+    Wrapper Class to store model object.
+    '''
     def __init__(self, model_name: str):
+        '''
+        Each model has an associated tokenizer object.
+        Load both.
+        '''
         super().__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = AutoModel.from_pretrained(model_name, output_attentions=True).to(
@@ -15,7 +22,10 @@ class AttentionGetter:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     def _grab_attn(self, context):
-        # Run Forward Pass
+        '''
+        function to get the attention for a model.
+        First runs a forward pass and then extracts and formats attn.
+        '''
         output = self.model(context)
         # Grab the attention from the output
         # Format as Layer x Head x From x To
@@ -30,27 +40,37 @@ class AttentionGetter:
         return format_attn
 
     def gpt_analyze_text(self, text: str):
-        # Process Input
+        """
+        Works for GPT-2 Style Models
+        """
+        # Run tokenizer
         toked = self.tokenizer.encode(text)
-        # Convert to PyTorch Tensor
+        # GPT-2 generates text after a |<endoftext>| token. Add this:
         start_token = torch.full(
             (1, 1), self.tokenizer.bos_token_id, device=self.device, dtype=torch.long,
         )
+        # Concatenate the text and start token
         context = torch.tensor(toked, device=self.device, dtype=torch.long).unsqueeze(0)
         context = torch.cat([start_token, context], dim=1)
+        # Extract attention
         attn = self._grab_attn(context)
-
+        # Build payload
         return {
             "tokens": self.tokenizer.convert_ids_to_tokens(context[0]),
             "attention": attn,
         }
 
     def bert_analyze_text(self, text: str):
-        """Works for BERT models"""
+        """
+        Works for BERT Style models
+        """
+        # Tokenize
         toked = self.tokenizer.encode(text)
+        # Build Tensor
         context = torch.tensor(toked).unsqueeze(0).long()
+        # Extract Attention
         attn = self._grab_attn(context)
-
+        # Build Payload
         return {
             "tokens": self.tokenizer.convert_ids_to_tokens(toked),
             "attention": attn,
