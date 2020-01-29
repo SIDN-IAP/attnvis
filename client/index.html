@@ -37,7 +37,7 @@
 
     </div>
     <div style="font-weight: bold; padding-top: 10px;">Layers & Heads</div>
-    <div id="layers" style="padding-top: 5px;">
+    <div id="layers" style="padding-top: 5px;display: none;">
         <!--        <h3>Layers</h3>-->
     </div>
     <!--    <div style="font-weight: bold; padding-top: 5px;">Heads:</div>-->
@@ -189,12 +189,47 @@
             headsDOM.style('display', null);
         }
 
-        const allAttns = [];
-        currentResults.attention.forEach((layer_data, layer) =>{
-            layer_data.forEach((data, head)=>{
+        let allAttns = [];
+        currentResults.attention.forEach((layer_data, layer) => {
+            layer_data.forEach((data, head) => {
                 allAttns.push({head, layer, data})
             })
-        })
+        });
+
+        const criterion = (a) => {
+            // get the attn distribution for the selected token:
+            const distribution = a.data[selectedToken];
+
+            // find argmax and max for the distribution:
+            const res = {i: -1, v: -1};
+            distribution.forEach((d, i) => {
+                if (d > res.v) {
+                    res.i = i;
+                    res.v = +d;
+                }
+            })
+
+            return res;
+        }
+
+        const sortBy = (a, b) => {
+            // get argmax (i) and max (v) for a and b:
+            const c_a = criterion(a);
+            const c_b = criterion(b);
+
+            // how far is argmax from selected token?
+            let res = Math.abs(c_a.i - selectedToken)
+              - Math.abs(c_b.i - selectedToken);
+
+            // if distance is equal, max value breaks tie:
+            if (res === 0) {
+                res = c_b.v - c_a.v;
+            }
+            return res;
+        };
+
+        // sort array:
+        allAttns = allAttns.sort(sortBy);
 
         // update all head rows
         const heads = headsDOM.selectAll('.head')
@@ -233,17 +268,18 @@
         updateHeadSelection();
 
         // in each heads Row add each token vis
-        heads.select('.attns').selectAll('.attBox').data(d => d.data[selectedToken])
+        heads.select('.attns').selectAll('.attBox')
+          .data(d => d.data[selectedToken])
           .join('div')
           .attr('class', 'attBox')
           // highlight the token that has been selected
           .classed('selected', (d, i) => i === selectedToken)
           .style('background-color', d => colorScale(d))
 
-        heads.selectAll(`.info`).data(d=> [d])
-            .join('div')
-            .attr('class', 'info')
-            .text(d => `${d.layer} -- ${d.head}`)
+        heads.selectAll(`.info`).data(d => [d])
+          .join('div')
+          .attr('class', 'info')
+          .text(d => `${d.layer} -- ${d.head}`)
 
     }
 
