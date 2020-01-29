@@ -7,6 +7,10 @@ by [Hendrik Strobelt](http://hendrik.strobelt.com) and [Sebastian Gehrmann](http
 for the [SIDN IAP class at MIT](http://sidn.csail.mit.edu), Jan 2020 
 
 
+<p align="center">
+  <img width="600" height="460" src="attnvis.gif">
+</p>
+
 ## Preparation
 - Install Anaconda or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 - run `conda env create -f environment.yml` to create a new environment called `attnvis`
