@@ -37,7 +37,7 @@ client/tools.js    -- helper functions
 - [D3js](https://d3js.org/) for javascript DOM manipulation
 
 ## Thanks
-Thanks to Ben Hoover for testing the code. Supported by [MIT-IBM Watson AI Lab](https://mitibmwatsonailab.mit.edu/). 
+Thanks to [Ben Hoover](https://github.com/bhoov/exbert) and [David Bau](https://people.csail.mit.edu/davidbau/home/) for testing the code. Supported by [MIT-IBM Watson AI Lab](https://mitibmwatsonailab.mit.edu/). 
 
 
  
