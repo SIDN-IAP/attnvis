@@ -3,7 +3,7 @@
 A small example of an interactive visualization for attention values
 as being used by transformer language models like GPT2 and BERT.
 
-by [Hendrik Strobelt](hendrik.strobelt.com) and [Sebastian Gehrmann](https://scholar.harvard.edu/gehrmann/home) 
+by [Hendrik Strobelt](http://hendrik.strobelt.com) and [Sebastian Gehrmann](https://scholar.harvard.edu/gehrmann/home) 
 for the [SIDN IAP class at MIT](http://sidn.csail.mit.edu), Jan 2020 
 
 
