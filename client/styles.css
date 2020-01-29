@@ -76,3 +76,14 @@ body {
 .head.selected {
     background-color: lightblue;
 }
+
+.head .attns{
+    display: inline-block;
+}
+
+.head .info{
+    display: inline-block;
+    font-size: 9pt;
+    pointer-events: none;
+    padding-left: 5px;
+}

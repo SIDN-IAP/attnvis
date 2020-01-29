@@ -189,31 +189,42 @@
             headsDOM.style('display', null);
         }
 
+        const allAttns = [];
+        currentResults.attention.forEach((layer_data, layer) =>{
+            layer_data.forEach((data, head)=>{
+                allAttns.push({head, layer, data})
+            })
+        })
+
         // update all head rows
         const heads = headsDOM.selectAll('.head')
-          .data(currentResults.attention[selectedLayer])
+          .data(allAttns)
           .join('div')
           .attr('class', 'head')
+          .html('<div class="attns"></div><div class="info"></div> ')
           .on('mouseenter', (d, i) => {
               // if hovering into a row - map color to TextVis
 
               // don't do anything if selection is fixed to a row
               if (selectedHeadFix) return;
               // else:
-              selectedHead = i;
+              selectedLayer = d.layer;
+              selectedHead = d.head;
               updateHeadSelection();
               updateWordBG();
           })
           .on('mouseout', (d, i) => {
               // if hovering out of a row..
               if (selectedHeadFix) return;
+              selectedLayer = d.layer;
               selectedHead = -1;
               updateHeadSelection();
               updateWordBG();
           })
           .on('click', (d, i) => {
               // if clicking on a row --> fix selection and stop hovering
-              selectedHead = i;
+              selectedLayer = d.layer;
+              selectedHead = d.head;
               selectedHeadFix = !selectedHeadFix;
               updateHeadSelection();
               updateWordBG();
@@ -222,12 +233,17 @@
         updateHeadSelection();
 
         // in each heads Row add each token vis
-        heads.selectAll('.attBox').data(d => d[selectedToken])
+        heads.select('.attns').selectAll('.attBox').data(d => d.data[selectedToken])
           .join('div')
           .attr('class', 'attBox')
           // highlight the token that has been selected
           .classed('selected', (d, i) => i === selectedToken)
           .style('background-color', d => colorScale(d))
+
+        heads.selectAll(`.info`).data(d=> [d])
+            .join('div')
+            .attr('class', 'info')
+            .text(d => `${d.layer} -- ${d.head}`)
 
     }
 
@@ -237,7 +253,9 @@
     function updateHeadSelection() {
 
         d3.select('#heads').selectAll('.head')
-          .classed('selected', (d, i) => i === selectedHead)
+          .classed('selected', (d, i) => {
+              return (d.head === selectedHead) && (d.layer == selectedLayer)
+          })
     }
 
 
