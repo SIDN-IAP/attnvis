@@ -29,6 +29,7 @@
     Enter a sentence:
     <input type="text" id="inputText"
            value="I dropped my pen in the mashed potatoes.">
+    <button id="sendButton"> send </button>
 </div>
 <hr>
 <div style="padding-top: 5px;">
@@ -76,7 +77,12 @@
     // select input field..
     const myInput = d3.select("#inputText");
     // .. and act when change of content:
-    myInput.on('change', () => {
+    myInput.on('change', () => triggerServerRequest());
+    //also act on clicking the send button
+    d3.select('#sendButton').on('click', triggerServerRequest);
+
+
+    function triggerServerRequest (){
         // get input content and bind to var
         const input_sentence = myInput.property('value');
         const model_name = d3.select('#model_select').property('value');
@@ -111,9 +117,8 @@
             updateTextVis();
 
         });
+    }
 
-
-    })
 
     // ====================================
     // Text Visualization (partial) updates
