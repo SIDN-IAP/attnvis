@@ -7,6 +7,10 @@ by [Hendrik Strobelt](http://hendrik.strobelt.com) and [Sebastian Gehrmann](http
 for the [SIDN IAP class at MIT](http://sidn.csail.mit.edu), Jan 2020 
 
 
+<p align="center">
+  <img width="600" height="460" src="attnvis.gif">
+</p>
+
 ## Preparation
 - Install Anaconda or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 - run `conda env create -f environment.yml` to create a new environment called `attnvis`
@@ -33,7 +37,7 @@ client/tools.js    -- helper functions
 - [D3js](https://d3js.org/) for javascript DOM manipulation
 
 ## Thanks
-Thanks to Ben Hoover for testing the code. Supported by [MIT-IBM Watson AI Lab](https://mitibmwatsonailab.mit.edu/). 
+Thanks to [Ben Hoover](https://github.com/bhoov/exbert) and [David Bau](https://people.csail.mit.edu/davidbau/home/) for testing the code. Supported by [MIT-IBM Watson AI Lab](https://mitibmwatsonailab.mit.edu/). 
 
 
  

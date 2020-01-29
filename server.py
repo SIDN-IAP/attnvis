@@ -79,8 +79,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nodebug", default=False)
     parser.add_argument("--port", default="8888")
+    parser.add_argument("--host", default=None)
     args = parser.parse_args()
 
     print(args)
 
-    app.run(port=int(args.port), debug=not args.nodebug)
+    app.run(host=args.host, port=int(args.port), debug=not args.nodebug)
