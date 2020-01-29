@@ -8,7 +8,7 @@ from flask import Flask as Flask, send_from_directory, request, Response, \
 # from flask_cors import CORS
 from transformers import pipeline
 
-__author__ = 'Hendrik Strobelt'
+__author__ = 'Hendrik Strobelt, Sebastian Gehrmann, Ben Hoover'
 
 from api import AttentionGetter
 
@@ -44,7 +44,7 @@ def attn():
     else:
         results = model.bert_analyze_text(sentence)
 
-    # return object with request (sentences) and result (sentiments)
+    # return object with request (sentence, model_name) and results
     return json.dumps({
         "request": {"sentence": sentence, 'model_name': model_name},
         "results": results
