@@ -1,0 +1,78 @@
+/* simple styles */
+body {
+    /* background-color: #aaaaaa; */
+    padding: 10px;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.header input {
+    width: 300px;
+}
+
+.word {
+    cursor: pointer;
+    transition-property: background-color;
+    transition-duration: 200ms;
+    min-width: 15px;
+}
+
+.word:hover {
+    outline: 2px solid lightblue;
+    outline-offset: -2px;
+}
+
+.word.selected {
+    outline: 1px dashed #404080;
+    outline-offset: -1px;
+}
+
+.word.spaceLeft::before {
+    content: ' ';
+}
+
+.word.newLine {
+    display: block;
+}
+
+.btn {
+    display: inline-block;
+    background-color: lightgray;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.btn:hover, .btn.selected {
+    background-color: lightblue;
+    /*color: white;*/
+}
+
+.btn.btn_l {
+    border-radius: 3px 0 0 3px;
+}
+
+.btn.btn_r {
+    border-radius: 0 3px 3px 0;
+}
+
+.attBox {
+    width: 20px;
+    height: 10px;
+    padding: 0;
+
+    display: inline-block;
+    pointer-events: none;
+}
+
+.attBox.selected {
+    outline: 1px dashed #404080;
+    outline-offset: -1px;
+    pointer-events: none;
+}
+
+.head {
+    white-space: nowrap;
+}
+
+.head.selected {
+    background-color: lightblue;
+}
